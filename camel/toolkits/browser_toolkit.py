@@ -1047,9 +1047,8 @@ class BrowserToolkit(BaseToolkit):
             planning_model = self.planning_agent_model
 
         system_prompt = """
-You are a helpful web agent that can assist users in browsing the web.
-Given a high-level task, you can leverage predefined browser tools to help
-users achieve their goals.
+あなたは、ユーザーの Web 閲覧を支援できる便利な Web エージェントです。
+高レベルのタスクが与えられた場合、定義済みのブラウザ ツールを活用して、ユーザーが目標を達成できるように支援できます。
         """
 
         web_agent = ChatAgent(
@@ -1059,8 +1058,7 @@ users achieve their goals.
         )
 
         planning_system_prompt = """
-You are a helpful planning agent that can assist users in planning complex
-tasks which need multi-step browser interaction.
+あなたは、複数ステップのブラウザ操作を必要とする複雑なタスクの計画をユーザーを支援することができる、役立つ計画エージェントです。
         """
 
         planning_agent = ChatAgent(
@@ -1080,41 +1078,32 @@ tasks which need multi-step browser interaction.
 
         if detailed_plan is not None:
             detailed_plan_prompt = f"""
-Here is a plan about how to solve the task step-by-step which you must follow:
+以下に、タスクを段階的に解決する方法に関する計画を示します。これに従う必要があります。
 <detailed_plan>{detailed_plan}<detailed_plan>
         """
 
         observe_prompt = f"""
-Please act as a web agent to help me complete the following high-level task:
+次の高レベルのタスクを完了するのを手伝ってくれる Web エージェントとして行動してください:
 <task>{task_prompt}</task>
-Now, I have made screenshot (only the current viewport, not the full webpage)
-based on the current browser state, and marked interactive elements in the
-webpage.
-Please carefully examine the requirements of the task, and current state of
-the browser, and provide the next appropriate action to take.
+これで、現在のブラウザの状態に基づいてスクリーンショット (現在のビューポートのみ、Web ページ全体ではありません) を作成し、Web ページ内のインタラクティブな要素をマークしました。
+タスクの要件とブラウザの現在の状態を慎重に検討し、次に実行する適切なアクションを提供してください。
 
 {detailed_plan_prompt}
 
-Here are the current available browser functions you can use:
+現在利用可能なブラウザ機能は次のとおりです。
 {AVAILABLE_ACTIONS_PROMPT}
 
-Here are the latest {self.history_window} trajectory (at most) you have taken:
+あなたがたどった最新の {self.history_window} の軌跡は次のとおりです (最大)。
 <history>
 {self.history[-self.history_window:]}
 </history>
 
-Your output should be in json format, including the following fields:
-- `observation`: The detailed image description about the current viewport. Do
-not over-confident about the correctness of the history actions. You should
-always check the current viewport to make sure the correctness of the next
-action.
-- `reasoning`: The reasoning about the next action you want to take, and the
-possible obstacles you may encounter, and how to solve them. Do not forget to
-check the history actions to avoid the same mistakes.
-- `action_code`: The action code you want to take. It is only one step action
-code, without any other texts (such as annotation)
+出力は、次のフィールドを含む json 形式である必要があります:
+- `observation`: 現在のビューポートに関する詳細な画像の説明。履歴アクションの正確さについて過信しないでください。次のアクションが正しいことを確認するために、常に現在のビューポートをチェックする必要があります。
+- `reasoning`: 次に実行するアクションの推論、遭遇する可能性のある障害、およびそれらの解決方法。同じ間違いを避けるために、履歴アクションを確認することを忘れないでください。
+- `action_code`: 実行するアクション コード。これは、他のテキスト (注釈など) のない、1 ステップのアクション コードのみです。
 
-Here is two example of the output:
+出力の例を 2 つ示します:
 ```json
 {{
     "observation": [IMAGE_DESCRIPTION],
@@ -1123,45 +1112,26 @@ Here is two example of the output:
 }}
 
 {{
-    "observation":  "The current page is a CAPTCHA verification page on Amazon. It asks the user to ..",
-    "reasoning": "To proceed with the task of searching for products, I need to complete..",
+    "observation":  "現在のページは、Amazon の CAPTCHA 検証ページです。ユーザーに次のことを要求します..",
+    "reasoning": "製品の検索タスクを進めるには、完了する必要があります..",
     "action_code": "fill_input_id(3, 'AUXPMR')"
 }}
 
-Here are some tips for you:
-- Never forget the overall question: **{task_prompt}**
-- Maybe after a certain operation (e.g. click_id), the page content has not
-changed. You can check whether the action step is successful by looking at the
-`success` of the action step in the history. If successful, it means that the
-page content is indeed the same after the click. You need to try other methods.
-- If using one way to solve the problem is not successful, try other ways.
-Make sure your provided ID is correct!
-- Some cases are very complex and need to be achieve by an iterative process.
-You can use the `back()` function to go back to the previous page to try other
-methods.
-- There are many links on the page, which may be useful for solving the
-problem. You can use the `click_id()` function to click on the link to see if
-it is useful.
-- Always keep in mind that your action must be based on the ID shown in the
-current image or viewport, not the ID shown in the history.
-- Do not use `stop()` lightly. Always remind yourself that the image only
-shows a part of the full page. If you cannot find the answer, try to use
-functions like `scroll_up()` and `scroll_down()` to check the full content of
-the webpage before doing anything else, because the answer or next key step
-may be hidden in the content below.
-- If the webpage needs human verification, you must avoid processing it.
-Please use `back()` to go back to the previous page, and try other ways.
-- If you have tried everything and still cannot resolve the issue, please stop
-the simulation, and report issues you have encountered.
-- Check the history actions carefully, detect whether you have repeatedly made
-the same actions or not.
-- When dealing with wikipedia revision history related tasks, you need to
-think about the solution flexibly. First, adjust the browsing history
-displayed on a single page to the maximum, and then make use of the
-find_text_on_page function. This is extremely useful which can quickly locate
-the text you want to find and skip massive amount of useless information.
-- Flexibly use interactive elements like slide down selection bar to filter
-out the information you need. Sometimes they are extremely useful.
+以下にヒントをいくつか示します:
+- 全体的な質問を忘れないでください: **{task_prompt}**
+- 特定の操作 (click_id など) の後、ページ コンテンツが変更されていない可能性があります。アクション ステップが成功したかどうかを確認するには、履歴のアクション ステップの `success` を確認します。成功した場合、ページ コンテンツはクリック後に実際に同じであることを意味します。他の方法を試す必要があります。
+- 1 つの方法で問題を解決できない場合は、他の方法を試してください。
+提供された ID が正しいことを確認してください。
+- 非常に複雑なケースもあり、反復プロセスで解決する必要があります。
+`back()` 関数を使用して前のページに戻り、他の方法を試すことができます。
+- ページには多くのリンクがあり、問題の解決に役立つ場合があります。`click_id()` 関数を使用してリンクをクリックし、役立つかどうかを確認できます。
+- アクションは、履歴に表示される ID ではなく、現在の画像またはビューポートに表示される ID に基づいて行う必要があることを常に念頭に置いてください。
+- `stop()` を軽々しく使用しないでください。画像にはページ全体の一部しか表示されていないことを常に念頭に置いてください。答えが見つからない場合は、他の操作を行う前に、`scroll_up()` や `scroll_down()` などの関数を使用して、Web ページのコンテンツ全体を確認してください。答えまたは次の重要なステップが下のコンテンツに隠れている可能性があるためです。
+- Web ページで人間による検証が必要な場合は、その処理を避ける必要があります。
+`back()` を使用して前のページに戻り、他の方法を試してください。
+- すべてを試しても問題が解決しない場合は、シミュレーションを停止し、発生した問題を報告してください。
+- 履歴アクションを注意深く確認し、同じアクションを繰り返し実行していないかどうかを検出します。
+- Wikipedia の改訂履歴関連のタスクを扱う場合、解決策を柔軟に考える必要があります。まず、1 ページに表示される閲覧履歴を最大に調整し、find_text_on_page 関数を使用します。これは非常に便利で、探しているテキストをすばやく見つけ、大量の無駄な情報をスキップできます。 - スライド ダウン選択バーなどのインタラクティブ要素を柔軟に使用して、必要な情報をフィルタリングします。これらは非常に便利な場合があります。
 ```
         """
 
@@ -1354,10 +1324,10 @@ Your output should be in json format, including the following fields:
 
         planning_prompt = f"""
 <task>{task_prompt}</task>
-According to the problem above, if we use browser interaction, what is the general process of the interaction after visiting the webpage `{start_url}`? 
+上記の問題によると、ブラウザインタラクションを使用する場合、Web ページ `{start_url}` にアクセスした後のインタラクションの一般的なプロセスは何ですか?
 
-Please note that it can be viewed as Partially Observable MDP. Do not over-confident about your plan.
-Please first restate the task in detail, and then provide a detailed plan to solve the task.
+これは部分的に観測可能な MDP として見ることができることに注意してください。計画について自信を持ちすぎないでください。
+まずタスクを詳細に再説明してから、タスクを解決するための詳細な計画を提供してください。
 """
         # Here are some tips for you: Please note that we can only see a part of the full page because of the limited viewport after an action. Thus, do not forget to use methods like `scroll_up()` and `scroll_down()` to check the full content of the webpage, because the answer or next key step may be hidden in the content below.
 
@@ -1383,22 +1353,22 @@ Please first restate the task in detail, and then provide a detailed plan to sol
 
         # Here are the available browser functions we can use: {AVAILABLE_ACTIONS_PROMPT}
         replanning_prompt = f"""
-We are using browser interaction to solve a complex task which needs multi-step actions.
-Here are the overall task:
+ブラウザインタラクションを使用して、複数ステップのアクションを必要とする複雑なタスクを解決しています。
+全体的なタスクは次のとおりです:
 <overall_task>{task_prompt}</overall_task>
 
-In order to solve the task, we made a detailed plan previously. Here is the detailed plan:
+タスクを解決するために、以前に詳細な計画を立てました。詳細な計画は次のとおりです:
 <detailed plan>{detailed_plan}</detailed plan>
 
-According to the task above, we have made a series of observations, reasonings, and actions. Here are the latest {self.history_window} trajectory (at most) we have taken:
+上記のタスクに従って、一連の観察、推論、およびアクションを実行しました。最新の {self.history_window} の軌跡 (最大) は次のとおりです:
 <history>{self.history[-self.history_window:]}</history>
 
-However, the task is not completed yet. As the task is partially observable, we may need to replan the task based on the current state of the browser if necessary.
-Now please carefully examine the current task planning schema, and our history actions, and then judge whether the task needs to be fundamentally replanned. If so, please provide a detailed replanned schema (including the restated overall task).
+ただし、タスクはまだ完了していません。タスクは部分的に観察可能なので、必要に応じてブラウザの現在の状態に基づいてタスクを再計画する必要があります。
+次に、現在のタスク計画スキーマと履歴アクションを慎重に調べて、タスクを根本的に再計画する必要があるかどうかを判断してください。必要な場合は、詳細な再計画スキーマ（再記述された全体的なタスクを含む）を提供してください。
 
-Your output should be in json format, including the following fields:
-- `if_need_replan`: bool, A boolean value indicating whether the task needs to be fundamentally replanned.
-- `replanned_schema`: str, The replanned schema for the task, which should not be changed too much compared with the original one. If the task does not need to be replanned, the value should be an empty string. 
+出力は、次のフィールドを含む json 形式である必要があります。
+- `if_need_replan`: bool、タスクを根本的に再計画する必要があるかどうかを示すブール値。
+- `replanned_schema`: str、タスクの再計画スキーマ。元のスキーマと比較してあまり変更しないでください。タスクを再計画する必要がない場合は、値は空の文字列である必要があります。
 """
         resp = self.planning_agent.step(replanning_prompt)
         resp_dict = _parse_json_output(resp.msgs[0].content)
