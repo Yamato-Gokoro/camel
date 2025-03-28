@@ -897,7 +897,7 @@ class OpenAPIName(Enum):
 
 
 class ModelPlatformType(Enum):
-    DEFAULT = os.getenv("DEFAULT_MODEL_PLATFORM_TYPE", "openai")
+    DEFAULT = os.getenv("DEFAULT_MODEL_PLATFORM_TYPE", "openai-compatible-model")
 
     OPENAI = "openai"
     AZURE = "azure"
