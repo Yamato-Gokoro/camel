@@ -28,6 +28,8 @@ from camel.prompts import TextPrompt
 from camel.responses import ChatAgentResponse
 from camel.types import RoleType, TaskType
 
+from langfuse.decorators import observe, langfuse_context
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
@@ -250,6 +252,11 @@ class RolePlaying:
             )
         else:
             self.planned_task_prompt = None
+
+    def _update_langfuse_context(self):
+        """Langfuseのコンテキストを更新"""
+        # メソッドのトレースにメタ情報を追加する
+        langfuse_context.update_current_trace(metadata={"user": os.getenv("USER_NAME")})
 
     def _get_sys_message_info(
         self,
@@ -503,7 +510,8 @@ class RolePlaying:
         )
 
         return init_msg
-
+    
+    @observe()
     def step(
         self,
         assistant_msg: BaseMessage,
@@ -529,6 +537,9 @@ class RolePlaying:
                 user agent terminated the conversation, and any additional user
                 information.
         """
+
+        self._update_langfuse_context()
+
         user_response = self.user_agent.step(assistant_msg)
         if user_response.terminated or user_response.msgs is None:
             return (
