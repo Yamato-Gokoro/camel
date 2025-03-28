@@ -75,6 +75,8 @@ from camel.types import (
 from camel.types.agents import ToolCallingRecord
 from camel.utils import get_model_encoding
 
+from langfuse.decorators import observe, langfuse_context
+
 if TYPE_CHECKING:
     from camel.terminators import ResponseTerminator
 
@@ -239,6 +241,14 @@ class ChatAgent(BaseAgent):
         self.terminated = False
         self.response_terminators = response_terminators or []
         self.single_iteration = single_iteration
+
+    def _update_langfuse_token(self, model: str, input_token: str, output_token: str):
+        # メソッドの観測にトークン情報を追加する
+        langfuse_context.update_current_observation(
+            model=model,
+            metadata={"user": os.getenv("USER_NAME")},
+            usage_details={"input": input_token, "output": output_token},
+        )
 
     def reset(self):
         r"""Resets the :obj:`ChatAgent` to its initial state."""
@@ -1055,6 +1065,7 @@ class ChatAgent(BaseAgent):
             external_tool_call_requests,
         )
 
+    @observe(as_type="generation")
     def _handle_batch_response(
         self, response: ChatCompletion
     ) -> ModelResponse:
@@ -1102,6 +1113,12 @@ class ChatAgent(BaseAgent):
                     tool_name=tool_name, args=args, tool_call_id=tool_call_id
                 )
                 tool_call_requests.append(tool_call_request)
+
+        user_prompt_token = usage.get("prompt_tokens", 0)
+        user_completion_token = usage.get("completion_tokens", 0)
+        self._update_langfuse_token(
+            self.model_type, user_prompt_token, user_completion_token
+        )
 
         return ModelResponse(
             response=response,
