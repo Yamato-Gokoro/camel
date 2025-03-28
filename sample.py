@@ -20,7 +20,7 @@ model = ModelFactory.create(
   model_platform=ModelPlatformType.OPENAI_COMPATIBLE_MODEL,
   # model_type=ModelType.GPT_4O,
   model_type="gemma-3-27b-it",
-  model_config_dict={"temperature": 0.0},
+  model_config_dict={"temperature": 0.0, "max_tokens":"128000"},
   api_key=os.getenv("OPENAI_API_KEY"),
   url=os.getenv("OPENAI_BASE_URL"),
 )
