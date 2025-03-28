@@ -2,35 +2,36 @@
 
   1. 依存関係をインストールする。
 
-    ```bash
-    uv venv .venv --python=3.10
-    source .venv/bin/activate
-    uv pip install -e . 
-    uv pip install 'camel-ai[web_tools]'
-    uv pip install numpy pandas unstructured pillow 
-    ```
+  ```bash
+  uv venv .venv --python=3.10
+  source .venv/bin/activate
+  uv pip install -e . 
+  uv pip install 'camel-ai[web_tools]'
+  uv pip install numpy pandas unstructured pillow 
+  ```
 
   2. `.env_dev`ファイルを作成し、下記の内容を記載する。
 
-    ```
-    # API設定
-    OPENAI_BASE_URL=https://exchangers-macstudio.tailcfc41a.ts.net:8443/api/
-    OPENAI_API_KEY="<LM Studioで発行したAPIキー>"
+  ```
+  # API設定
+  OPENAI_BASE_URL=https://exchangers-macstudio.tailcfc41a.ts.net:8443/api/
+  OPENAI_API_KEY="<LM Studioで発行したAPIキー>"
 
-    # Langfuse設定
-    LANGFUSE_PUBLIC_KEY="<Langfuseで発行した公開鍵>"
-    LANGFUSE_SECRET_KEY="<Langfuseで発行した秘密鍵>"
-    LANGFUSE_HOST="https://exchangers-macstudio.tailcfc41a.ts.net:8444"
+  # Langfuse設定
+  LANGFUSE_PUBLIC_KEY="<Langfuseで発行した公開鍵>"
+  LANGFUSE_SECRET_KEY="<Langfuseで発行した秘密鍵>"
+  LANGFUSE_HOST="https://exchangers-macstudio.tailcfc41a.ts.net:8444"
 
-    # ユーザー情報
-    USER_NAME="<使用者名>"
-    ```
-    注釈）`USER_NAME`の例：山田太郎の場合、`t.yamada`
+  # ユーザー情報
+  USER_NAME="<使用者名>"
+  ```
+
+  注釈）`USER_NAME`の例：山田太郎の場合、`t.yamada`
 
   3. 以下のコマンドを実行する。
-    ```bash
-    python sample.py
-    ```
+  ```bash
+  python sample.py
+  ```
 
 <details><summary>実行結果</summary>
 
